@@ -43,8 +43,11 @@ def main(config):
         north_predictions = []
         south_predictions = []
         for p in predictions:
-            if len(p["estimate"]) == 0:
+            # Filter out cancelled trains and empty estimates
+            active_estimates = [e for e in p["estimate"] if e.get("cancelflag", "0") != "1"]
+            if len(active_estimates) == 0:
                 continue
+            p["estimate"] = active_estimates
             direction = p["estimate"][0].get("direction", "")
             if direction == "North":
                 north_predictions.append(p)
