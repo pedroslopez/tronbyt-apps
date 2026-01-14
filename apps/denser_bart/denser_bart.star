@@ -38,51 +38,35 @@ def main(config):
                 child = render.Text("No Data", font = "6x13", color = "#fff"),
             ),
         )
-    elif num_routes < 5:
-        # Show a single column
-        train_rows = []
-        for i in range(0, num_routes):
-            if len(predictions[i]["estimate"]) == 0:
-                continue
-            train_rows.append(
-                render.Row(
-                    main_align = "center",
-                    cross_align = "end",
-                    expanded = True,
-                    children = get_element_viz(predictions[i], True) if viz else get_element(predictions[i], True),
-                ),
-            )
-        return render.Root(
-            delay = 250 if viz else 125,
-            child = render.Box(
-                height = 32,
-                width = 64,
-                child = render.Column(
-                    main_align = "space_between",
-                    cross_align = "start",
-                    expanded = True,
-                    children = train_rows,
-                ),
-            ),
-        )
-
     else:
-        # Show dual columns
-        train_rows = []
-        num_rows = (num_routes + 1) // 2
-        i = 0
-        for _ in range(0, num_rows):
-            if len(predictions[i]["estimate"]) == 0:
-                i += 1
+        # Show dual columns - split by direction (North on left, South on right)
+        north_predictions = []
+        south_predictions = []
+        for p in predictions:
+            if len(p["estimate"]) == 0:
                 continue
+            direction = p["estimate"][0].get("direction", "")
+            if direction == "North":
+                north_predictions.append(p)
+            else:
+                south_predictions.append(p)
+
+        # Sort each direction by earliest arrival time
+        north_predictions = sorted(north_predictions, key = lambda p: int(p["estimate"][0]["minutes"]) if p["estimate"][0]["minutes"] != "Leaving" else 0)
+        south_predictions = sorted(south_predictions, key = lambda p: int(p["estimate"][0]["minutes"]) if p["estimate"][0]["minutes"] != "Leaving" else 0)
+
+        max_rows = max(len(north_predictions), len(south_predictions))
+        if max_rows == 0:
+            max_rows = 1
+
+        train_rows = []
+        for i in range(0, max_rows):
             left = []
-            if i < num_routes:
-                left = get_element_viz(predictions[i], False) if viz else get_element(predictions[i], False)
-            i += 1
+            if i < len(north_predictions):
+                left = get_element_viz(north_predictions[i], False) if viz else get_element(north_predictions[i], False)
             right = []
-            if i < num_routes:
-                right = get_element_viz(predictions[i], False) if viz else get_element(predictions[i], False)
-            i += 1
+            if i < len(south_predictions):
+                right = get_element_viz(south_predictions[i], False) if viz else get_element(south_predictions[i], False)
             train_rows.append(
                 render.Row(
                     main_align = "space_around",
