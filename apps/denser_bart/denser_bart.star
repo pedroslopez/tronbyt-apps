@@ -101,15 +101,10 @@ def main(config):
             )
         return render.Root(
             delay = 250 if viz else 125,
-            child = render.Box(
-                height = 32,
-                width = 64,
-                child = render.Column(
-                    main_align = "space_between",
-                    cross_align = "start",
-                    expanded = True,
-                    children = train_rows,
-                ),
+            child = render.Column(
+                main_align = "start",
+                cross_align = "start",
+                children = train_rows,
             ),
         )
 
